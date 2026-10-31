@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tweak OS</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tweak OS">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html,body{height:100%;margin:0;overflow:hidden;background:radial-gradient(120% 80% at 50% 0,#2b2b34,#0b0b0d) #0b0b0d;color:#fff;font:15px -apple-system,system-ui,Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
@@ -70,6 +74,8 @@ var APPS=[["Телефон","#34c759",G.ph,-1],["Сообщения","#34c759",G
 ["Почта","#0a84ff",G.ml,0],["Фото","#ff9f0a",G.pt,0],["Карты","#30d158",G.mp,0],["Музыка","#ff375f",G.mu,0],
 ["Часы","#1c1c1e",G.ck,0],["Погода","#4aa8ff",G.wt,0],["Заметки","#ffd60a",G.nt,0],["Настройки","#8e8e93",G.st,0],
 ["Календарь","#fff",G.cl,1],["Видео","#1c1c1e",G.tv,1],["Игры","#5e5ce6",G.gm,1],["TweakStore","#5e5ce6",G.ts,1]];
+var LS={auto:true,fix:false,row:100,top:0},SIG="";try{LS=Object.assign(LS,JSON.parse(localStorage.getItem("ls1")||"{}"))}catch(e){}
+function saveLS(){try{localStorage.setItem("ls1",JSON.stringify(LS))}catch(e){}}
 var scr=document.getElementById("screen"),dock=document.getElementById("dock"),win=document.getElementById("win"),wc=document.getElementById("wc"),ts=document.getElementById("ts"),dots=document.getElementById("dots");
 var B=[],NP=2,W=0,H=0,R=29,mode="home",page=0,px=0,dragging=false,gx=0,gy=1200,tgx=0,tgy=1200,last=performance.now(),sens=26,openB=null;
 var L={frame:[],shake:[],tilt:[]},RUN={};
@@ -85,14 +91,15 @@ B.forEach(function(b,j){b.e.querySelector("i").style.animationDelay=j*45+"ms"});
 
 function layout(){
   W=innerWidth;H=innerHeight;
-  var cw=W/4,top=Math.max(90,H*.11),cnt={},dr=dock.getBoundingClientRect();
+  var cw=W/4,top=(LS.fix?90:Math.max(90,H*.11))+LS.top,cnt={},dr=dock.getBoundingClientRect();
   B.forEach(function(b){
     var i=cnt[b.pg]=(cnt[b.pg]==null?0:cnt[b.pg]+1);
     if(b.pg<0){b.hx=cw*(i+.5);b.hy=dr.top+dr.height/2}
-    else{b.hx=b.pg*W+cw*(i%4+.5);b.hy=top+100*Math.floor(i/4)+30}
+    else{b.hx=b.pg*W+cw*(i%4+.5);b.hy=top+LS.row*Math.floor(i/4)+30}
   });
 }
 addEventListener("resize",layout);layout();
+addEventListener("orientationchange",function(){setTimeout(layout,300)});addEventListener("pageshow",layout);addEventListener("load",function(){setTimeout(layout,200)});if(window.visualViewport)visualViewport.addEventListener("resize",layout);
 
 /* ядро физики */
 function loosen(){
@@ -105,6 +112,7 @@ function shake(){L.shake.slice().forEach(function(f){try{f()}catch(e){toast("О�
 
 function step(t){
   var dt=Math.min(.033,(t-last)/1000);last=t;
+  if(LS.auto){var dr0=dock.getBoundingClientRect(),sig=innerWidth+"x"+innerHeight+"x"+Math.round(dr0.top);if(sig!==SIG){SIG=sig;layout()}}
   gx+=(tgx-gx)*.2;gy+=(tgy-gy)*.2;
   if(!dragging)px+=(page*W-px)*Math.min(1,dt*12);
   var kk=1-Math.pow(.002,dt),busy=false,i,j;
@@ -656,11 +664,18 @@ function nr(a,txt,val){return'<div class="r" data-a="nav:'+a+'"><div class="t">'
 function rs(){
   var v=view[view.length-1],h="",ti="";
   if(v==="main"){
-    h='<div class="h1">Настройки</div><div class="g">'+nr("tweaks","Твики",tw.filter(function(x){return x.on}).length+" вкл.")+nr("store","TweakStore",tw.length+" установлено")+nr("editor","Редактор твиков","")+'</div>';
+    h='<div class="h1">Настройки</div><div class="g">'+nr("tweaks","Твики",tw.filter(function(x){return x.on}).length+" вкл.")+nr("store","TweakStore",tw.length+" установлено")+nr("screen","Экран","")+nr("editor","Редактор твиков","")+'</div>';
   }else if(v==="tweaks"){
     ti="Твики";
     h='<div class="g">'+tw.map(function(x){var m=meta(x.src);return'<div class="r"><div class="t">'+esc(m.name)+'<small>'+esc(m.desc)+'</small></div><button class="bk" data-a="edit:'+x.id+'">Код</button><input class="sw" type="checkbox" data-a="tog:'+x.id+'"'+(x.on?" checked":"")+'></div>'}).join("")+'</div>'
      +'<div class="g"><div class="r"><div class="t">Чувствительность тряски</div><input type="range" id="sens" min="12" max="45" value="'+sens+'"></div><div class="r lk" data-a="sensors">Включить датчики</div><div class="r lk" data-a="probe">Проверить тряску</div></div><div class="n" id="ss">Закрой приложение (полоска внизу) и тряхни телефон. Наклоняй его, чтобы иконки ползали.</div>';
+  }else if(v==="screen"){
+    ti="Экран";
+    h='<div class="g"><div class="r"><div class="t">Авто-подстройка<small>Сетка и док сами подстраиваются под размер экрана</small></div><input class="sw" type="checkbox" data-a="ls:auto"'+(LS.auto?" checked":"")+'></div>'
+     +'<div class="r"><div class="t">Без привязки к высоте<small>Сетка начинается с фиксированного отступа сверху</small></div><input class="sw" type="checkbox" data-a="ls:fix"'+(LS.fix?" checked":"")+'></div>'
+     +'<div class="r"><div class="t">Расстояние между рядами</div><input type="range" id="lrow" min="70" max="130" value="'+LS.row+'"></div>'
+     +'<div class="r"><div class="t">Сдвиг сетки вверх и вниз</div><input type="range" id="ltop" min="-40" max="100" value="'+LS.top+'"></div>'
+     +'<div class="r lk" data-a="relayout">Пересчитать сейчас</div><div class="r rd" data-a="lsreset">Сбросить</div></div><div class="n">Если значки съехали, оставь авто-подстройку включённой или нажми «Пересчитать сейчас». Если всё равно сдвинуто, подвинь ползунки вручную.</div>';
   }else if(v==="store"){
     ti="TweakStore";
     h=(view.length===1?'<div class="h1">TweakStore</div>':'')+storeBar()+'<div class="g"><label class="r lk">Добавить твик из файла .twig<input type="file" id="f" accept=".twig,.txt,.js,text/plain" hidden></label><div class="r lk" data-a="paste">Вставить код из буфера</div><div class="r lk" data-a="new">Создать в редакторе</div></div><div class="n">Файл .twig — обычный текст с JavaScript. В начале строки «// @name» и «// @description», дальше код: tweak.onEnable = function(api){ … }</div>'
@@ -673,9 +688,12 @@ function rs(){
   var f=document.getElementById("f");if(f)f.onchange=function(){var x=f.files[0];if(x)x.text().then(addSrc)};
   var s=document.getElementById("sens");if(s)s.oninput=function(){sens=+s.value};
   var q=document.getElementById("q");if(q){q.value=SF.q;q.oninput=function(){SF.q=q.value;document.getElementById("cat").innerHTML=catHtml()}}
+  var lr=document.getElementById("lrow");if(lr)lr.oninput=function(){LS.row=+lr.value;saveLS();layout()};
+  var lt=document.getElementById("ltop");if(lt)lt.oninput=function(){LS.top=+lt.value;saveLS();layout()};
 }
 wc.addEventListener("change",function(e){
   var a=e.target.getAttribute&&e.target.getAttribute("data-a");
+  if(a&&a.indexOf("ls:")===0){LS[a.slice(3)]=e.target.checked;saveLS();layout();return}
   if(a&&a.indexOf("tog:")===0){var t=find(a.slice(4));t.on=e.target.checked;if(t.on){run(t);e.target.checked=t.on}else stop(t.id);persist()}
 });
 wc.addEventListener("click",function(e){
@@ -693,6 +711,8 @@ wc.addEventListener("click",function(e){
     if(ed.id){t=find(ed.id);t.src=src;t.on=true}else{t={id:uid(),src:src,on:true};tw.push(t);ed.id=t.id}
     run(t);persist();toast(t.on?"Сохранено и включено":"Сохранено, но есть ошибка");
   }
+  else if(c==='relayout'){layout();toast('Пересчитано')}
+  else if(c==='lsreset'){LS.auto=true;LS.fix=false;LS.row=100;LS.top=0;saveLS();layout();rs()}
   else if(c==='chip'){SF.c=id;rs()}
   else if(c==='cat')addSrc(srcOf(CAT[+id]));
   else if(c==="paste"){pasteClip(addSrc,function(){ed={id:null,src:""};view.push("editor");rs();toast("Буфер недоступен: вставь код в поле вручную")})}
