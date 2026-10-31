@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tweak OS</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;overflow:hidden;background:radial-gradient(120% 80% at 50% 0,#2b2b34,#0b0b0d) #0b0b0d;color:#fff;font:15px -apple-system,system-ui,Roboto,sans-serif;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#screen{position:fixed;inset:0;z-index:1;touch-action:none}
+#dock{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);height:84px;border-radius:28px;background:#ffffff1f;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:0}
+#dots{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 106px);display:flex;justify-content:center;gap:8px;z-index:1;pointer-events:none}
+#dots i{width:7px;height:7px;border-radius:50%;background:#ffffff55}#dots i.on{background:#fff}
+.ic{position:absolute;left:0;top:0;width:60px;text-align:center;will-change:transform}
+.ic i{display:block;width:56px;height:56px;margin:0 2px;border-radius:13px;box-shadow:0 3px 8px #0006;position:relative;background:linear-gradient(#ffffff40,#00000026),var(--c)}
+.ic svg{position:absolute;inset:0;width:100%;height:100%;padding:11px;box-sizing:border-box;pointer-events:none}
+.ic b{display:block;font-size:11px;font-weight:500;margin-top:4px;text-shadow:0 1px 3px #000;white-space:nowrap;pointer-events:none}
+.ic.d b{display:none}
+#win{position:fixed;z-index:10;overflow:hidden;background:#000;display:none;transition:left .38s,top .38s,width .38s,height .38s,border-radius .38s,opacity .3s;transition-timing-function:cubic-bezier(.2,.8,.2,1)}
+#wc{position:absolute;inset:0;overflow:auto;opacity:0;transition:opacity .2s .15s;padding-top:calc(env(safe-area-inset-top,0px) + 8px);padding-bottom:50px;box-sizing:border-box;-webkit-user-select:text;user-select:text;touch-action:pan-y}
+#win.o #wc{opacity:1}
+#hbz{position:absolute;left:0;right:0;bottom:0;height:34px;z-index:2}
+#hbz:after{content:"";position:absolute;left:50%;bottom:8px;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:#fff}
+#ts{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translate(-50%,-90px);background:#2c2c2ef0;padding:10px 16px;border-radius:16px;z-index:20;transition:transform .3s;max-width:86%;font-size:14px}
+#ts.on{transform:translate(-50%,0)}
+.hd{display:flex;align-items:center;padding:4px 8px 8px}.hd b{flex:1;text-align:center;font-size:17px;margin-right:64px}
+.bk{color:#0a84ff;background:none;border:0;font-size:17px;padding:8px;font-family:inherit}
+.h1{font-size:32px;font-weight:700;margin:6px 20px 14px}
+.g{background:#1c1c1e;border-radius:12px;margin:0 16px 8px;overflow:hidden}
+.n{color:#8e8e93;font-size:13px;margin:0 20px 18px;line-height:1.4}
+.r{display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid #38383a;min-height:24px}
+.r:first-child{border-top:0}.r .t{flex:1;min-width:0}.r small{display:block;color:#8e8e93;font-size:13px}
+.ch{color:#636366}.lk{color:#0a84ff}.rd{color:#ff453a}
+.sw{-webkit-appearance:none;appearance:none;width:51px;height:31px;border-radius:16px;background:#39393d;position:relative;flex:none;transition:background .2s;border:0;margin:0}
+.sw:after{content:"";position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;transition:transform .2s}
+.sw:checked{background:#34c759}.sw:checked:after{transform:translateX(20px)}
+textarea{display:block;box-sizing:border-box;width:calc(100% - 32px);height:46vh;margin:0 16px 8px;background:#1c1c1e;color:#e5e5ea;border:0;border-radius:12px;padding:12px;font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace;resize:none;white-space:pre;overflow:auto}
+.bt{display:block;width:calc(100% - 32px);margin:8px 16px;padding:13px;border:0;border-radius:12px;background:#0a84ff;color:#fff;font-size:16px;font-weight:600;font-family:inherit}.bt.s{background:#2c2c2e}
+#er{margin:0 20px 8px;font-size:13px;color:#ff453a;min-height:16px}
+.sb{padding:0 16px 10px}#q{display:block;box-sizing:border-box;width:100%;padding:11px 14px;border:0;border-radius:12px;background:#1c1c1e;color:#fff;font-size:16px;outline:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 12px}.chip,.chipon{padding:7px 14px;border-radius:16px;background:#2c2c2e;font-size:14px}.chipon{background:#5e5ce6}
+.ic i{animation:pop .5s cubic-bezier(.3,1.5,.5,1) backwards}@keyframes pop{from{transform:scale(.2);opacity:0}}
+</style>
+</head>
+<body>
+<div id="dock"></div>
+<div id="screen"></div>
+<div id="dots"></div>
+<div id="win"><div id="wc"></div><div id="hbz"></div></div>
+<div id="ts"></div>
+<script>
+var G={
+ph:'<path fill="#fff" d="M6.6 10.8a15 15 0 006.6 6.6l2.2-2.2a1 1 0 011-.25 11 11 0 003.5.6 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.2.2 2.4.6 3.5a1 1 0 01-.25 1z"/>',
+ms:'<path fill="#fff" d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.5 3.4 6L4.5 21l4.2-2.2c1 .3 2.2.4 3.300.4 5.500 0 10-3.600 10-8S17.500 3 12 3z"/>',
+br:'<circle cx="12" cy="12" r="9" fill="none" stroke="#fff" stroke-width="1.6"/><path fill="#fff" d="M16 8l-2.200 5.800L8 16l2.200-5.800z"/>',
+cm:'<path fill="#fff" d="M4 8h3l1.500-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.600" fill="#6e6e73"/>',
+ml:'<rect x="3" y="5.500" width="18" height="13" rx="2" fill="#fff"/><path d="M3.800 7l8.200 6 8.200-6" stroke="#0a84ff" fill="none" stroke-width="1.600"/>',
+pt:'<circle cx="8" cy="8.500" r="2" fill="#fff"/><path fill="#fff" d="M3 19l6-8 4 5 3-3 5 6z"/>',
+mp:'<path fill="#fff" d="M12 21s-7-6.200-7-11a7 7 0 0114 0c0 4.800-7 11-7 11z"/><circle cx="12" cy="10" r="2.600" fill="#30d158"/>',
+mu:'<path d="M9 17V6l10-2v11" fill="none" stroke="#fff" stroke-width="2"/><circle cx="7" cy="17" r="2.600" fill="#fff"/><circle cx="17" cy="15" r="2.600" fill="#fff"/>',
+ck:'<circle cx="12" cy="12" r="9" fill="#fff"/><path d="M12 6.500V12l3.800 2.200" stroke="#000" fill="none" stroke-width="1.800" stroke-linecap="round"/>',
+wt:'<circle cx="9" cy="9" r="4" fill="#ffd60a"/><path d="M8 19a4 4 0 010-8 5 5 0 019.500 1.500A3.200 3.200 0 0117 19z" fill="#fff"/>',
+nt:'<rect x="5" y="3" width="14" height="18" rx="2" fill="#fff"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#c9a400" stroke-width="1.500" stroke-linecap="round"/>',
+st:'<circle cx="12" cy="12" r="8.500" fill="none" stroke="#d1d1d6" stroke-width="3" stroke-dasharray="2.600 2.600"/><circle cx="12" cy="12" r="6.500" fill="#e5e5ea"/><circle cx="12" cy="12" r="2.800" fill="#636366"/>',
+cl:'<text x="12" y="7.500" text-anchor="middle" font-size="5" font-weight="700" fill="#ff3b30">'+new Date().toLocaleDateString("ru",{weekday:"short"}).toUpperCase()+'</text><text x="12" y="19" text-anchor="middle" font-size="13" font-weight="300" fill="#000">'+new Date().getDate()+'</text>',
+tv:'<rect x="3" y="5" width="18" height="12" rx="2" fill="#fff"/><path d="M10 8.500v5l4.200-2.500z" fill="#1c1c1e"/><path d="M8 20h8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>',
+gm:'<path fill="#fff" d="M7 8h10a4 4 0 014 4v2a3 3 0 01-5.200 2l-1.300-1.500h-5L8.200 16A3 3 0 013 14v-2a4 4 0 014-4z"/><path d="M8 10.500v3M6.500 12h3" stroke="#5e5ce6" stroke-width="1.500" stroke-linecap="round"/>',
+ts:'<path d="M6 8h12l1 12H5z" fill="#fff"/><path d="M9 8a3 3 0 016 0" stroke="#fff" fill="none" stroke-width="1.6"/><path d="M9.5 12.5h5M12 12.5V17" stroke="#5e5ce6" stroke-width="1.6" stroke-linecap="round"/>'};
+var APPS=[["Телефон","#34c759",G.ph,-1],["Сообщения","#34c759",G.ms,-1],["Браузер","#0a84ff",G.br,-1],["Камера","#6e6e73",G.cm,-1],
+["Почта","#0a84ff",G.ml,0],["Фото","#ff9f0a",G.pt,0],["Карты","#30d158",G.mp,0],["Музыка","#ff375f",G.mu,0],
+["Часы","#1c1c1e",G.ck,0],["Погода","#4aa8ff",G.wt,0],["Заметки","#ffd60a",G.nt,0],["Настройки","#8e8e93",G.st,0],
+["Календарь","#fff",G.cl,1],["Видео","#1c1c1e",G.tv,1],["Игры","#5e5ce6",G.gm,1],["TweakStore","#5e5ce6",G.ts,1]];
+var scr=document.getElementById("screen"),dock=document.getElementById("dock"),win=document.getElementById("win"),wc=document.getElementById("wc"),ts=document.getElementById("ts"),dots=document.getElementById("dots");
+var B=[],NP=2,W=0,H=0,R=29,mode="home",page=0,px=0,dragging=false,gx=0,gy=1200,tgx=0,tgy=1200,last=performance.now(),sens=26,openB=null;
+var L={frame:[],shake:[],tilt:[]},RUN={};
+var ios=typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function",gotMotion=false;
+
+APPS.forEach(function(a){
+  var e=document.createElement("div");e.className="ic"+(a[3]<0?" d":"");
+  e.innerHTML='<i style="--c:'+a[1]+'"><svg viewBox="0 0 24 24">'+a[2]+'</svg></i><b>'+a[0]+'</b>';
+  var b={e:e,n:a[0],pg:a[3],x:0,y:0,hx:0,hy:0,vx:0,vy:0,a:0,m:"home"};e._b=b;B.push(b);scr.appendChild(e);
+});
+for(var k=0;k<NP;k++){dots.appendChild(document.createElement("i"))}
+B.forEach(function(b,j){b.e.querySelector("i").style.animationDelay=j*45+"ms"});
+
+function layout(){
+  W=innerWidth;H=innerHeight;
+  var cw=W/4,top=Math.max(90,H*.11),cnt={},dr=dock.getBoundingClientRect();
+  B.forEach(function(b){
+    var i=cnt[b.pg]=(cnt[b.pg]==null?0:cnt[b.pg]+1);
+    if(b.pg<0){b.hx=cw*(i+.5);b.hy=dr.top+dr.height/2}
+    else{b.hx=b.pg*W+cw*(i%4+.5);b.hy=top+100*Math.floor(i/4)+30}
+  });
+}
+addEventListener("resize",layout);layout();
+
+/* ядро физики */
+function loosen(){
+  mode="loose";
+  B.forEach(function(b){if(b.pg<0||b.pg===page){b.x=b.hx-(b.pg<0?0:px);b.y=b.hy;b.vx=(Math.random()-.5)*900;b.vy=-200-Math.random()*500;b.m="loose"}});
+}
+function restore(){mode="back";B.forEach(function(b){if(b.m==="loose")b.m="back"})}
+function toggleLoose(){mode==="loose"?restore():loosen()}
+function shake(){L.shake.slice().forEach(function(f){try{f()}catch(e){toast("Ошибка: "+e.message)}})}
+
+function step(t){
+  var dt=Math.min(.033,(t-last)/1000);last=t;
+  gx+=(tgx-gx)*.2;gy+=(tgy-gy)*.2;
+  if(!dragging)px+=(page*W-px)*Math.min(1,dt*12);
+  var kk=1-Math.pow(.002,dt),busy=false,i,j;
+  B.forEach(function(b){
+    var off=b.pg<0?0:px;
+    if(b.m==="loose"){
+      busy=true;b.vx+=gx*dt;b.vy+=gy*dt;b.vx*=.997;b.vy*=.997;
+      b.x+=b.vx*dt;b.y+=b.vy*dt;b.a+=b.vx*dt/R;
+      if(b.x<R){b.x=R;b.vx=-b.vx*.6}if(b.x>W-R){b.x=W-R;b.vx=-b.vx*.6}
+      if(b.y<R+40){b.y=R+40;b.vy=-b.vy*.6}if(b.y>H-R){b.y=H-R;b.vy=-b.vy*.6;b.vx*=.985}
+    }else if(b.m==="back"){
+      var tx=b.hx-off;b.x+=(tx-b.x)*kk;b.y+=(b.hy-b.y)*kk;b.a-=b.a*kk;
+      if(Math.abs(tx-b.x)+Math.abs(b.hy-b.y)<1){b.m="home";b.a=0}else busy=true;
+    }
+  });
+  if(mode==="loose")for(i=0;i<B.length;i++)for(j=i+1;j<B.length;j++){
+    var p=B[i],q=B[j];if(p.m!=="loose"||q.m!=="loose")continue;
+    var dx=q.x-p.x,dy=q.y-p.y,d=Math.sqrt(dx*dx+dy*dy)||1;
+    if(d<2*R){var nx=dx/d,ny=dy/d,o=(2*R-d)/2;p.x-=nx*o;p.y-=ny*o;q.x+=nx*o;q.y+=ny*o;
+      var rel=(p.vx-q.vx)*nx+(p.vy-q.vy)*ny;if(rel>0){var im=rel*.8;p.vx-=im*nx;p.vy-=im*ny;q.vx+=im*nx;q.vy+=im*ny}}
+  }
+  if(mode==="back"&&!busy)mode="home";
+  L.frame.slice().forEach(function(f){try{f(dt)}catch(e){L.frame.splice(L.frame.indexOf(f),1);toast("Ошибка: "+e.message)}});
+  B.forEach(function(b){
+    var home=b.m==="home",sx=home?b.hx-(b.pg<0?0:px):b.x,sy=home?b.hy:b.y;
+    b.e.style.transform="translate3d("+(sx-30)+"px,"+(sy-28)+"px,0) rotate("+b.a+"rad)";
+  });
+  var cp=Math.round(px/W);for(i=0;i<NP;i++)dots.children[i].className=i===cp?"on":"";
+  requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+
+/* жесты: тап и листание страниц */
+var d0=null;
+scr.addEventListener("pointerdown",function(e){d0={x:e.clientX,y:e.clientY,p:px,m:0,t:e.target}});
+addEventListener("pointermove",function(e){
+  if(!d0)return;var dx=e.clientX-d0.x;d0.m=Math.max(d0.m,Math.abs(dx),Math.abs(e.clientY-d0.y));
+  if(mode==="home"&&d0.m>8){dragging=true;px=Math.max(-40,Math.min((NP-1)*W+40,d0.p-dx))}
+});
+function up(e){
+  if(!d0)return;var dx=e.clientX-d0.x;
+  if(d0.m<8){var el=d0.t.closest&&d0.t.closest(".ic");if(el&&e.type==="pointerup")openApp(el._b)}
+  else if(dragging)page=dx<-50?Math.min(NP-1,page+1):dx>50?Math.max(0,page-1):page;
+  dragging=false;d0=null;
+}
+addEventListener("pointerup",up);addEventListener("pointercancel",up);
+
+/* открытие и закрытие приложений */
+function rectOf(b){var r=b.e.querySelector("i").getBoundingClientRect();return{l:r.left,t:r.top,w:r.width,h:r.height}}
+function setWin(r,rad,op){win.style.left=r.l+"px";win.style.top=r.t+"px";win.style.width=r.w+"px";win.style.height=r.h+"px";win.style.borderRadius=rad+"px";win.style.opacity=op}
+function openApp(b){
+  if(openB)return;openB=b;
+  wc.innerHTML="";if(b.n==="Настройки"){view=["main"];rs()}else if(b.n==="TweakStore"){view=["store"];rs()}
+  win.style.display="block";setWin(rectOf(b),13,.2);win.offsetWidth;
+  win.classList.add("o");setWin({l:0,t:0,w:innerWidth,h:innerHeight},0,1);
+}
+function closeApp(){
+  if(!openB)return;var b=openB;win.classList.remove("o");setWin(rectOf(b),13,0);
+  setTimeout(function(){win.style.display="none";wc.innerHTML="";openB=null},380);
+}
+document.getElementById("hbz").addEventListener("pointerup",closeApp);
+
+function toast(m){ts.textContent=m;ts.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(function(){ts.classList.remove("on")},2600)}
+
+/* твики: рантайм */
+function meta(s){var n=/@name\s+(.+)/.exec(s),d=/@description\s+(.+)/.exec(s);return{name:n?n[1].trim():"Без названия",desc:d?d[1].trim():""}}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return"&#"+c.charCodeAt(0)+";"})}
+function mkApi(h){return{
+  icons:B,size:function(){return{w:W,h:H}},gravity:function(){return{x:gx,y:gy}},
+  loosen:loosen,restore:restore,toggleLoose:toggleLoose,isLoose:function(){return mode==="loose"},toast:toast,
+  on:function(t,f){if(!L[t])throw new Error("Нет события «"+t+"». Доступно: frame, shake, tilt");L[t].push(f);h.push({l:L[t],f:f})}}}
+function stop(id){
+  var r=RUN[id];if(!r)return;try{r.tw.onDisable&&r.tw.onDisable()}catch(e){}
+  r.h.forEach(function(x){var i=x.l.indexOf(x.f);if(i>=0)x.l.splice(i,1)});delete RUN[id];
+  if(mode==="loose")restore();
+}
+function run(t){
+  stop(t.id);var tw={},h=[],api=mkApi(h);
+  try{new Function("tweak","api",t.src)(tw,api);tw.onEnable&&tw.onEnable(api);RUN[t.id]={tw:tw,h:h}}
+  catch(e){h.forEach(function(x){var i=x.l.indexOf(x.f);if(i>=0)x.l.splice(i,1)});t.on=false;toast("Ошибка в «"+meta(t.src).name+"»: "+e.message)}
+}
+var SHAKE_SRC="// @name Тряска\n// @description Иконки отваливаются при тряске, при повторной возвращаются\ntweak.onEnable=function(api){\n  api.on('shake',function(){api.toggleLoose()});\n};";
+var TPL="// @name Мой твик\n// @description Что делает твик\n// API: api.on('shake'|'frame'|'tilt',fn), api.icons, api.loosen(),\n// api.restore(), api.toggleLoose(), api.gravity(), api.size(), api.toast(текст)\ntweak.onEnable=function(api){\n  api.on('shake',function(){\n    api.toast('Тряска!');\n  });\n};\ntweak.onDisable=function(){};";
+var tw=[];
+try{tw=JSON.parse(localStorage.getItem("tw1")||"[]")}catch(e){}
+if(!tw.length)tw=[{id:"shake",src:SHAKE_SRC,on:true}];
+function persist(){try{localStorage.setItem("tw1",JSON.stringify(tw))}catch(e){}}
+function uid(){return"t"+Date.now().toString(36)+Math.floor(Math.random()*1e3)}
+function pasteClip(ok,fail){
+  if(!navigator.clipboard||!navigator.clipboard.readText){fail();return}
+  navigator.clipboard.readText().then(function(s){s&&s.trim()?ok(s):toast("Буфер пуст")}).catch(fail);
+}
+function mk(t,o){var s=t;for(var k in o)s=s.split('@'+k+'@').join(o[k]);return s}
+var T_STY=`var ic=[];
+tweak.onEnable=function(api){ic=api.icons;ic.forEach(function(b){b.e.querySelector('@T@').style.@P@=@V@})};
+tweak.onDisable=function(){ic.forEach(function(b){b.e.querySelector('@T@').style.@P@=''})};`;
+var T_OV=`var el;
+tweak.onEnable=function(api){
+  el=document.createElement('div');
+  el.style.cssText='position:fixed;inset:0;z-index:29;pointer-events:none;@CSS@';
+  document.body.appendChild(el);
+};
+tweak.onDisable=function(){if(el)el.remove()};`;
+var T_FR=`var ic=[];
+tweak.onEnable=function(api){
+  ic=api.icons;
+  api.on('frame',function(){
+    var t=Date.now()/1000;
+    ic.forEach(function(b,k){@BODY@});
+  });
+};
+tweak.onDisable=function(){ic.forEach(function(b){@OFF@})};`;
+var T_PH=`tweak.onEnable=function(api){
+  api.on('frame',function(dt){
+    var g=api.gravity(),s=api.size();
+    api.icons.forEach(function(b,k){if(b.m==='loose'){@BODY@}});
+  });
+};`;
+var T_PG=`var last=0,sv=0,ic=[];
+tweak.onEnable=function(api){
+  ic=api.icons;last=px;
+  api.on('frame',function(dt){
+    if(!dt)return;
+    sv+=((px-last)/dt-sv)*0.3;last=px;
+    var cw=innerWidth/4;
+    ic.forEach(function(b,k){
+      if(b.pg<0)return;
+      var col=Math.round((b.hx-b.pg*innerWidth)/cw-.5);
+      @BODY@
+    });
+  });
+};
+tweak.onDisable=function(){ic.forEach(function(b){@OFF@})};`;
+var T_WA=`var o,c;
+tweak.onEnable=function(api){
+  o=openApp;c=closeApp;var w=document.getElementById('win');
+  openApp=function(b){var was=openB;o(b);if(!was)w.animate(@OPEN@,{duration:@MS@,easing:@E@})};
+  closeApp=function(){var was=openB;c();if(was)w.animate(@CLOSE@,{duration:@MS@,easing:@E@})};
+};
+tweak.onDisable=function(){openApp=o;closeApp=c};`;
+var IT=`b.e.querySelector('i').style.transform=`;
+var CAT=[
+['Круглые значки','Все значки становятся круглыми',`var ic=[];
+tweak.onEnable=function(api){ic=api.icons;ic.forEach(function(b){b.e.querySelector('i').style.borderRadius='50%'})};
+tweak.onDisable=function(){ic.forEach(function(b){b.e.querySelector('i').style.borderRadius=''})};`],
+['Без подписей','Прячет названия под значками',`var ic=[];
+tweak.onEnable=function(api){ic=api.icons;ic.forEach(function(b){b.e.querySelector('b').style.display='none'})};
+tweak.onDisable=function(){ic.forEach(function(b){b.e.querySelector('b').style.display=''})};`],
+['Часы на экране','Крупные часы наверху домашнего экрана',`var el,t0=0;
+tweak.onEnable=function(api){
+  el=document.createElement('div');
+  el.style.cssText='position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);text-align:center;font-size:52px;font-weight:200;z-index:2;pointer-events:none;text-shadow:0 2px 12px #0008';
+  document.body.appendChild(el);
+  function upd(){var d=new Date();el.textContent=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+  upd();
+  api.on('frame',function(){var n=Date.now();if(n-t0>1000){t0=n;upd()}});
+};
+tweak.onDisable=function(){if(el)el.remove()};`],
+['Ночной режим','Тёплый фильтр, меньше синего света',`var el;
+tweak.onEnable=function(api){
+  el=document.createElement('div');
+  el.style.cssText='position:fixed;inset:0;z-index:30;pointer-events:none;background:#ff8c1a;mix-blend-mode:multiply;opacity:.35';
+  document.body.appendChild(el);
+};
+tweak.onDisable=function(){if(el)el.remove()};`],
+['Вибро-отклик','Лёгкая вибрация при открытии и закрытии приложений',`var o,c;
+tweak.onEnable=function(api){
+  o=openApp;c=closeApp;
+  openApp=function(b){if(!openB&&navigator.vibrate)navigator.vibrate(12);o(b)};
+  closeApp=function(){if(openB&&navigator.vibrate)navigator.vibrate(8);c()};
+};
+tweak.onDisable=function(){openApp=o;closeApp=c};`],
+['Параллакс значков','Значки смещаются при наклоне телефона (нужны датчики)',`var ic=[];
+function cl(v,m){return Math.max(-m,Math.min(m,v))}
+tweak.onEnable=function(api){
+  ic=api.icons;
+  api.on('frame',function(){
+    var g=api.gravity();
+    ic.forEach(function(b){
+      if(b.pg<0)return;
+      var t=cl(g.x*0.025,28)*(0.5+b.hy/innerHeight),p=b._p||0,np=p+(t-p)*0.1;
+      b.hx+=np-p;b._p=np;
+    });
+  });
+};
+tweak.onDisable=function(){ic.forEach(function(b){b.hx-=(b._p||0);b._p=0})};`],
+['Невесомость','После тряски значки летают и не падают',`tweak.onEnable=function(api){
+  api.on('frame',function(dt){
+    var g=api.gravity();
+    api.icons.forEach(function(b){
+      if(b.m!=='loose')return;
+      b.vx-=g.x*dt;b.vy-=g.y*dt;b.vx*=1.003;b.vy*=1.003;
+      var s=Math.sqrt(b.vx*b.vx+b.vy*b.vy);
+      if(s>900){b.vx*=900/s;b.vy*=900/s}
+    });
+  });
+};`],
+['Лунная гравитация','После тряски значки падают в пять раз медленнее',`tweak.onEnable=function(api){
+  api.on('frame',function(dt){
+    var g=api.gravity();
+    api.icons.forEach(function(b){if(b.m==='loose'){b.vx-=g.x*dt*.8;b.vy-=g.y*dt*.8}});
+  });
+};`],
+['Магнит','После тряски значки тянутся к пальцу',`var tx=0,ty=0,on=false,ts,te;
+tweak.onEnable=function(api){
+  ts=function(e){var t=e.touches[0];tx=t.clientX;ty=t.clientY;on=true};
+  te=function(){on=false};
+  document.addEventListener('touchstart',ts,{passive:true});
+  document.addEventListener('touchmove',ts,{passive:true});
+  document.addEventListener('touchend',te,{passive:true});
+  api.on('frame',function(dt){
+    if(!on)return;
+    api.icons.forEach(function(b){
+      if(b.m!=='loose')return;
+      b.vx+=(tx-b.x)*6*dt;b.vy+=(ty-b.y)*6*dt;b.vx*=.985;b.vy*=.985;
+    });
+  });
+};
+tweak.onDisable=function(){
+  document.removeEventListener('touchstart',ts);document.removeEventListener('touchmove',ts);document.removeEventListener('touchend',te);on=false;
+};`],
+['Радуга','Цвета значков плавно переливаются',`var ic=[];
+tweak.onEnable=function(api){
+  ic=api.icons;
+  api.on('frame',function(){
+    var h=(Date.now()/20)%360;
+    ic.forEach(function(b,k){b.e.querySelector('i').style.filter='hue-rotate('+((h+k*22)%360)+'deg)'});
+  });
+};
+tweak.onDisable=function(){ic.forEach(function(b){b.e.querySelector('i').style.filter=''})};`],
+['Снегопад','На домашнем экране идёт снег',`var cv,fl=[];
+tweak.onEnable=function(api){
+  cv=document.createElement('canvas');
+  cv.style.cssText='position:fixed;inset:0;z-index:2;pointer-events:none';
+  cv.width=innerWidth;cv.height=innerHeight;document.body.appendChild(cv);
+  fl=[];for(var i=0;i<70;i++)fl.push({x:Math.random()*cv.width,y:Math.random()*cv.height,r:1+Math.random()*2.5,s:20+Math.random()*40});
+  var c=cv.getContext('2d');
+  api.on('frame',function(dt){
+    c.clearRect(0,0,cv.width,cv.height);c.fillStyle='#fff';
+    fl.forEach(function(f){
+      f.y+=f.s*dt;f.x+=Math.sin(f.y/30+f.r)*.4;
+      if(f.y>cv.height){f.y=-4;f.x=Math.random()*cv.width}
+      c.globalAlpha=.4+f.r/5;c.beginPath();c.arc(f.x,f.y,f.r,0,6.3);c.fill();
+    });
+  });
+};
+tweak.onDisable=function(){if(cv)cv.remove()};`],
+['Следы от пальца','Светящийся шлейф за пальцем',`var h;
+tweak.onEnable=function(api){
+  h=function(e){
+    var t=e.touches[0],d=document.createElement('div');
+    d.style.cssText='position:fixed;z-index:25;pointer-events:none;width:14px;height:14px;border-radius:50%;background:#0a84ff;box-shadow:0 0 12px #0a84ff;opacity:.8;transition:opacity .5s,transform .5s;left:'+(t.clientX-7)+'px;top:'+(t.clientY-7)+'px';
+    document.body.appendChild(d);
+    setTimeout(function(){d.style.opacity=0;d.style.transform='scale(.2)'},20);
+    setTimeout(function(){d.remove()},560);
+  };
+  document.addEventListener('touchmove',h,{passive:true});
+};
+tweak.onDisable=function(){document.removeEventListener('touchmove',h)};`],
+['Дрожащие значки','Значки покачиваются, как в режиме правки на iOS',`var ic=[];
+tweak.onEnable=function(api){
+  ic=api.icons;
+  api.on('frame',function(){
+    var t=Date.now()/60;
+    ic.forEach(function(b,k){if(b.m==='home')b.a=Math.sin(t+k*1.7)*.06});
+  });
+};
+tweak.onDisable=function(){ic.forEach(function(b){if(b.m==='home')b.a=0})};`],
+['Клик-звук','Короткий звук при каждом касании экрана',`var ctx,h;
+tweak.onEnable=function(api){
+  h=function(){
+    try{
+      ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();
+      var o=ctx.createOscillator(),g=ctx.createGain();
+      o.frequency.value=880;g.gain.value=.08;
+      o.connect(g);g.connect(ctx.destination);
+      o.start();g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.08);o.stop(ctx.currentTime+.09);
+    }catch(e){}
+  };
+  document.addEventListener('pointerdown',h);
+};
+tweak.onDisable=function(){document.removeEventListener('pointerdown',h)};`],
+['Чёрная дыра','После тряски значки кружатся вокруг центра экрана',`tweak.onEnable=function(api){
+  api.on('frame',function(dt){
+    var s=api.size();
+    api.icons.forEach(function(b){
+      if(b.m!=='loose')return;
+      b.vx+=(s.w/2-b.x)*3*dt;b.vy+=(s.h/2-b.y)*3*dt;b.vx*=.99;b.vy*=.99;
+    });
+  });
+};`],
+['Крупные значки','Значки увеличиваются на 18%',`var ic=[];
+tweak.onEnable=function(api){ic=api.icons;ic.forEach(function(b){b.e.querySelector('i').style.transform='scale(1.18)'})};
+tweak.onDisable=function(){ic.forEach(function(b){b.e.querySelector('i').style.transform=''})};`],
+['Вращение','Все значки на домашнем экране постоянно вращаются',`var ic=[];
+tweak.onEnable=function(api){
+  ic=api.icons;
+  api.on('frame',function(dt){ic.forEach(function(b){if(b.m==='home')b.a+=dt*1.2})});
+};
+tweak.onDisable=function(){ic.forEach(function(b){if(b.m==='home')b.a=0})};`],
+['Батарея','Процент заряда в левом верхнем углу',`var el;
+tweak.onEnable=function(api){
+  el=document.createElement('div');
+  el.style.cssText='position:fixed;left:14px;top:calc(env(safe-area-inset-top,0px) + 14px);z-index:2;pointer-events:none;font-size:14px;opacity:.85';
+  document.body.appendChild(el);
+  if(!navigator.getBattery){el.textContent='Батарея недоступна';return}
+  navigator.getBattery().then(function(b){
+    function u(){el.textContent=(b.charging?'⚡ ':'')+Math.round(b.level*100)+'%'}
+    u();b.onlevelchange=u;b.onchargingchange=u;
+  });
+};
+tweak.onDisable=function(){if(el)el.remove()};`],
+['Двойной тап → Настройки','Двойное касание пустого места открывает Настройки',`var h,last=0;
+tweak.onEnable=function(api){
+  h=function(e){
+    if(openB||(e.target.closest&&e.target.closest('.ic')))return;
+    var n=Date.now();
+    if(n-last<350){last=0;openApp(api.icons.filter(function(b){return b.n==='Настройки'})[0])}else last=n;
+  };
+  document.addEventListener('pointerup',h);
+};
+tweak.onDisable=function(){document.removeEventListener('pointerup',h)};`],
+['Прозрачный док','Убирает плашку дока под нижними значками',`var d,bg;
+tweak.onEnable=function(){
+  d=document.getElementById('dock');bg=d.style.background;
+  d.style.background='transparent';d.style.backdropFilter='none';d.style.webkitBackdropFilter='none';
+};
+tweak.onDisable=function(){d.style.background=bg;d.style.backdropFilter='';d.style.webkitBackdropFilter=''};`],
+['Квадратные углы','Почти без скругления углов',mk(T_STY,{T:'i',P:'borderRadius',V:`'3px'`}),'Значки'],
+['Сильные тени','Значки отбрасывают глубокую тень',mk(T_STY,{T:'i',P:'boxShadow',V:`'0 10px 22px #000c'`}),'Значки'],
+['Свечение','Мягкое белое свечение вокруг значков',mk(T_STY,{T:'i',P:'boxShadow',V:`'0 0 16px #fff9'`}),'Значки'],
+['Неон','Голубая неоновая обводка',mk(T_STY,{T:'i',P:'boxShadow',V:`'0 0 0 2px #0ff,0 0 18px #0ff'`}),'Значки'],
+['Чёрно-белые значки','Все цвета убираются',mk(T_STY,{T:'i',P:'filter',V:`'grayscale(1)'`}),'Значки'],
+['Сепия','Тёплый винтажный оттенок',mk(T_STY,{T:'i',P:'filter',V:`'sepia(.9)'`}),'Значки'],
+['Инверсия','Цвета значков наоборот',mk(T_STY,{T:'i',P:'filter',V:`'invert(1)'`}),'Значки'],
+['Сочные цвета','Больше насыщенности и контраста',mk(T_STY,{T:'i',P:'filter',V:`'saturate(2) contrast(1.1)'`}),'Значки'],
+['Размытые значки','Мягкий блюр',mk(T_STY,{T:'i',P:'filter',V:`'blur(1.6px)'`}),'Значки'],
+['Призрачные значки','Полупрозрачные значки',mk(T_STY,{T:'i',P:'opacity',V:`'.55'`}),'Значки'],
+['Крупные подписи','Название под значком крупнее',mk(T_STY,{T:'b',P:'fontSize',V:`'14px'`}),'Подписи'],
+['Жирные подписи','Название под значком жирным',mk(T_STY,{T:'b',P:'fontWeight',V:`'800'`}),'Подписи'],
+['Жёлтые подписи','Название под значком жёлтым',mk(T_STY,{T:'b',P:'color',V:`'#ffd60a'`}),'Подписи'],
+['Подписи капсом','НАЗВАНИЯ БОЛЬШИМИ БУКВАМИ',mk(T_STY,{T:'b',P:'textTransform',V:`'uppercase'`}),'Подписи'],
+['Виньетка','Затемнённые края экрана',mk(T_OV,{CSS:`background:radial-gradient(ellipse at center,transparent 55%,#000c 100%)`}),'Эффекты'],
+['Сканлайны','Линии как на старом мониторе',mk(T_OV,{CSS:`background:repeating-linear-gradient(0deg,#0000 0,#0000 2px,#0003 3px)`}),'Эффекты'],
+['Сетка','Тонкая сетка поверх экрана',mk(T_OV,{CSS:`background-image:linear-gradient(#fff1 1px,transparent 1px),linear-gradient(90deg,#fff1 1px,transparent 1px);background-size:28px 28px`}),'Эффекты'],
+['Холодный фильтр','Синеватый оттенок экрана',mk(T_OV,{CSS:`background:#4a90ff;mix-blend-mode:multiply;opacity:.3`}),'Эффекты'],
+['Затемнение','Экран темнее на 40%',mk(T_OV,{CSS:`background:#000;opacity:.4`}),'Эффекты'],
+['Неоновая рамка','Розовое свечение по краям экрана',mk(T_OV,{CSS:`box-shadow:inset 0 0 0 3px #ff2bd6,inset 0 0 26px #ff2bd6aa`}),'Эффекты'],
+['Волна значков','Значки качаются волной',mk(T_FR,{BODY:IT+`'translateY('+Math.sin(t*3+k*.6)*5+'px)'`,OFF:IT+`''`}),'Анимации'],
+['Прыжки','Значки подпрыгивают по очереди',mk(T_FR,{BODY:IT+`'translateY('+(-Math.abs(Math.sin(t*4+k*.5))*10)+'px)'`,OFF:IT+`''`}),'Анимации'],
+['Пульс','Значки пульсируют',mk(T_FR,{BODY:IT+`'scale('+(1+.08*Math.sin(t*3+k))+')'`,OFF:IT+`''`}),'Анимации'],
+['Мерцание','Значки мягко мерцают',mk(T_FR,{BODY:`b.e.style.opacity=.65+.35*Math.sin(t*3+k)`,OFF:`b.e.style.opacity=''`}),'Анимации'],
+['Маятник','Значки качаются как маятники',mk(T_FR,{BODY:`if(b.m==='home')b.a=Math.sin(t*1.5+k*.4)*.18`,OFF:`if(b.m==='home')b.a=0`}),'Анимации'],
+['Качели','Значки едут влево-вправо',mk(T_FR,{BODY:IT+`'translateX('+Math.sin(t*2+k*.7)*6+'px)'`,OFF:IT+`''`}),'Анимации'],
+['Кручение значков','Сами значки вращаются, подписи стоят',mk(T_FR,{BODY:IT+`'rotate('+(t*60+k*20)+'deg)'`,OFF:IT+`''`}),'Анимации'],
+['3D-покачивание','Значки поворачиваются в 3D',mk(T_FR,{BODY:IT+`'perspective(200px) rotateY('+Math.sin(t*2+k*.5)*35+'deg)'`,OFF:IT+`''`}),'Анимации'],
+['Тяжёлая гравитация','После тряски значки падают вдвое быстрее',mk(T_PH,{BODY:`b.vx+=g.x*dt;b.vy+=g.y*dt;`}),'Физика'],
+['Ветер','После тряски значки сносит вправо',mk(T_PH,{BODY:`b.vx+=260*dt;`}),'Физика'],
+['Вихрь','После тряски значки закручиваются',mk(T_PH,{BODY:`var dx=b.x-s.w/2,dy=b.y-s.h/2;b.vx+=-dy*1.5*dt;b.vy+=dx*1.5*dt;`}),'Физика'],
+['Мёд','После тряски значки вязнут',mk(T_PH,{BODY:`b.vx*=.94;b.vy*=.94;`}),'Физика'],
+['Скольжение','После тряски значки разгоняются по полу',mk(T_PH,{BODY:`b.vx*=1.01;`}),'Физика'],
+['Хаос','После тряски значки получают случайные толчки',mk(T_PH,{BODY:`if(Math.random()<.02){b.vx+=(Math.random()-.5)*500;b.vy+=(Math.random()-.5)*500}`}),'Физика'],
+['Супер-отскок','Значки отскакивают от краёв сильнее',mk(T_PH,{BODY:`if(b.x<=30||b.x>=s.w-30)b.vx*=1.4;if(b.y<=70||b.y>=s.h-30)b.vy*=1.4;var v=Math.sqrt(b.vx*b.vx+b.vy*b.vy);if(v>1400){b.vx*=1400/v;b.vy*=1400/v}`}),'Физика'],
+['Пузыри','После тряски значки всплывают вверх',mk(T_PH,{BODY:`b.vy-=g.y*dt*2;`}),'Физика'],
+['Тройной тап → тряска','Три касания пустого места включают тряску',`var h,n=0,t0=0;
+tweak.onEnable=function(api){
+  h=function(e){
+    if(openB||(e.target.closest&&e.target.closest('.ic')))return;
+    var t=Date.now();n=t-t0<500?n+1:1;t0=t;
+    if(n>=3){n=0;api.toggleLoose()}
+  };
+  document.addEventListener('pointerup',h);
+};
+tweak.onDisable=function(){document.removeEventListener('pointerup',h)};`,'Жесты'],
+['Долгое нажатие → тряска','Удерживай пустое место, и значки отвалятся',`var h,m,u,tm,sx=0,sy=0;
+tweak.onEnable=function(api){
+  h=function(e){
+    if(openB||(e.target.closest&&e.target.closest('.ic')))return;
+    sx=e.clientX;sy=e.clientY;clearTimeout(tm);
+    tm=setTimeout(function(){api.toggleLoose()},700);
+  };
+  m=function(e){if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>12)clearTimeout(tm)};
+  u=function(){clearTimeout(tm)};
+  document.addEventListener('pointerdown',h);
+  document.addEventListener('pointermove',m);
+  document.addEventListener('pointerup',u);
+};
+tweak.onDisable=function(){
+  clearTimeout(tm);
+  document.removeEventListener('pointerdown',h);document.removeEventListener('pointermove',m);document.removeEventListener('pointerup',u);
+};`,'Жесты'],
+['Шторка времени','Свайп вниз от верхнего края показывает время и дату',`var h,sy,go=false;
+tweak.onEnable=function(api){
+  h=function(e){
+    var t=e.touches[0];
+    if(e.type==='touchstart'){sy=t.clientY;go=t.clientY<40;return}
+    if(go&&t.clientY-sy>80){go=false;var d=new Date();api.toast(d.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})+', '+d.toLocaleDateString('ru',{weekday:'long',day:'numeric',month:'long'}))}
+  };
+  document.addEventListener('touchstart',h,{passive:true});
+  document.addEventListener('touchmove',h,{passive:true});
+};
+tweak.onDisable=function(){document.removeEventListener('touchstart',h);document.removeEventListener('touchmove',h)};`,'Жесты'],
+['Разлёт при листании','Значки разлетаются вверх и вниз при листании',mk(T_PG,{BODY:IT+`'translateY('+Math.max(-80,Math.min(80,sv*0.03*(col%2?1:-1)))+'px)'`,OFF:IT+`''`}),'Страницы'],
+['Масштаб при листании','Значки сжимаются при быстром листании',mk(T_PG,{BODY:IT+`'scale('+(1-Math.min(.45,Math.abs(sv)/4000))+')'`,OFF:IT+`''`}),'Страницы'],
+['Вращение при листании','Значки закручиваются при листании',mk(T_PG,{BODY:IT+`'rotate('+Math.max(-120,Math.min(120,sv*.06*(col-1.5)))+'deg)'`,OFF:IT+`''`}),'Страницы'],
+['Затухание при листании','Значки бледнеют, пока страница едет',mk(T_PG,{BODY:`b.e.style.opacity=1-Math.min(.85,Math.abs(sv)/2500)`,OFF:`b.e.style.opacity=''`}),'Страницы'],
+['3D-переворот страниц','Значки переворачиваются в 3D при листании',mk(T_PG,{BODY:IT+`'perspective(300px) rotateY('+Math.max(-80,Math.min(80,sv*.04))+'deg)'`,OFF:IT+`''`}),'Страницы'],
+['Открытие: вращение','Окно приложения открывается с поворотом',mk(T_WA,{OPEN:`[{transform:'rotate(-12deg) scale(.85)'},{transform:'none'}]`,CLOSE:`[{transform:'none'},{transform:'rotate(12deg) scale(.85)'}]`,MS:'380',E:`'cubic-bezier(.2,.8,.2,1)'`}),'Приложения'],
+['Открытие: переворот','Окно приложения переворачивается как страница',mk(T_WA,{OPEN:`[{transform:'perspective(900px) rotateY(-80deg)'},{transform:'perspective(900px) rotateY(0deg)'}]`,CLOSE:`[{transform:'perspective(900px) rotateY(0deg)'},{transform:'perspective(900px) rotateY(80deg)'}]`,MS:'420',E:`'cubic-bezier(.2,.8,.2,1)'`}),'Приложения'],
+['Открытие: падение','Окно падает сверху',mk(T_WA,{OPEN:`[{transform:'translateY(-60%)'},{transform:'none'}]`,CLOSE:`[{transform:'none'},{transform:'translateY(60%)'}]`,MS:'420',E:`'cubic-bezier(.2,.8,.2,1)'`}),'Приложения'],
+['Открытие: размытие','Окно проявляется из блюра',mk(T_WA,{OPEN:`[{filter:'blur(14px)'},{filter:'blur(0)'}]`,CLOSE:`[{filter:'blur(0)'},{filter:'blur(14px)'}]`,MS:'380',E:`'ease-out'`}),'Приложения'],
+['Открытие: пружина','Окно открывается с пружинным отскоком',mk(T_WA,{OPEN:`[{transform:'scale(.6)'},{transform:'scale(1)'}]`,CLOSE:`[{transform:'scale(1)'},{transform:'scale(.7)'}]`,MS:'650',E:`'cubic-bezier(.34,1.8,.5,1)'`}),'Приложения'],
+['Открытие: сбоку','Окно выезжает справа',mk(T_WA,{OPEN:`[{transform:'translateX(100%)'},{transform:'none'}]`,CLOSE:`[{transform:'none'},{transform:'translateX(100%)'}]`,MS:'400',E:`'cubic-bezier(.2,.8,.2,1)'`}),'Приложения'],
+['Навигация Android','Три кнопки ◁ ○ □ и жесты: свайп вверх снизу — домой, свайп от края — назад',`var bar,pill,sx,sy,zone,done;
+tweak.onEnable=function(api){
+  pill=document.getElementById('hbz');pill.style.display='none';
+  bar=document.createElement('div');
+  bar.style.cssText='position:absolute;left:0;right:0;bottom:0;height:48px;background:#000;display:flex;z-index:3;border-top:1px solid #222';
+  function back(){
+    if(openB&&(openB.n==='Настройки'||openB.n==='TweakStore')&&view.length>1){view.pop();rs()}else closeApp();
+  }
+  [['◁',back],['○',closeApp],['□',function(){api.toast('Недавних приложений нет')}]].forEach(function(b){
+    var x=document.createElement('button');x.textContent=b[0];
+    x.style.cssText='flex:1;background:none;border:0;color:#fff;font-size:22px';
+    x.onclick=b[1];bar.appendChild(x);
+  });
+  document.getElementById('win').appendChild(bar);
+  tweak.ts=function(e){
+    if(!openB)return;var t=e.touches[0];sx=t.clientX;sy=t.clientY;done=false;
+    zone=sy>innerHeight-60?'home':sx<24?'left':sx>innerWidth-24?'right':'';
+  };
+  tweak.tm=function(e){
+    if(!zone||done)return;var t=e.touches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(zone==='home'&&dy<-60){done=true;closeApp()}
+    if((zone==='left'&&dx>60)||(zone==='right'&&dx<-60)){done=true;back()}
+  };
+  document.addEventListener('touchstart',tweak.ts,{passive:true});
+  document.addEventListener('touchmove',tweak.tm,{passive:true});
+};
+tweak.onDisable=function(){
+  document.removeEventListener('touchstart',tweak.ts);
+  document.removeEventListener('touchmove',tweak.tm);
+  if(bar)bar.remove();
+  if(pill)pill.style.display='';
+};`,'Рекомендованные'],
+['Рабочие заметки','Приложение «Заметки» открывается и сохраняет текст в браузере',`var o;
+tweak.onEnable=function(api){
+  o=openApp;
+  openApp=function(b){
+    o(b);
+    if(b.n!=='Заметки')return;
+    var wc=document.getElementById('wc'),v='';
+    try{v=localStorage.getItem('notes1')||''}catch(e){}
+    var h=document.createElement('div');h.textContent='Заметки';h.style.cssText='font-size:32px;font-weight:700;margin:6px 20px 10px';
+    var t=document.createElement('textarea');t.placeholder='Пиши здесь…';
+    t.style.cssText='display:block;box-sizing:border-box;width:calc(100% - 32px);height:60vh;margin:0 16px;background:#1c1c1e;color:#fff;border:0;border-radius:12px;padding:14px;font:16px/1.5 system-ui,sans-serif;resize:none';
+    t.value=v;
+    t.oninput=function(){try{localStorage.setItem('notes1',t.value)}catch(e){}};
+    wc.appendChild(h);wc.appendChild(t);
+  };
+};
+tweak.onDisable=function(){openApp=o};`,'Рекомендованные'],
+['Часы и секундомер','Приложение «Часы» показывает время и работает как секундомер',`var o,iv;
+tweak.onEnable=function(api){
+  o=openApp;
+  openApp=function(b){
+    o(b);
+    if(b.n!=='Часы')return;
+    var wc=document.getElementById('wc'),big=document.createElement('div'),sw=document.createElement('div'),bt=document.createElement('button'),rb=document.createElement('button'),run=false,t0=0,acc=0;
+    big.style.cssText='font-size:64px;font-weight:200;text-align:center;margin-top:40px';
+    sw.style.cssText='font-size:44px;font-weight:200;text-align:center;margin-top:50px;font-variant-numeric:tabular-nums';
+    [bt,rb].forEach(function(x){x.style.cssText='display:block;margin:16px auto 0;width:200px;padding:13px;border:0;border-radius:12px;background:#2c2c2e;color:#fff;font-size:16px'});
+    bt.textContent='Старт';rb.textContent='Сброс';
+    function p(n,l){return ('00'+n).slice(-l)}
+    function upd(){
+      if(!big.isConnected){clearInterval(iv);return}
+      var d=new Date();big.textContent=p(d.getHours(),2)+':'+p(d.getMinutes(),2)+':'+p(d.getSeconds(),2);
+      var ms=acc+(run?Date.now()-t0:0);
+      sw.textContent=p(Math.floor(ms/60000),2)+':'+p(Math.floor(ms/1000)%60,2)+'.'+p(Math.floor(ms/10)%100,2);
+    }
+    bt.onclick=function(){if(run){acc+=Date.now()-t0;run=false;bt.textContent='Старт'}else{t0=Date.now();run=true;bt.textContent='Стоп'}};
+    rb.onclick=function(){run=false;acc=0;bt.textContent='Старт'};
+    [big,sw,bt,rb].forEach(function(x){wc.appendChild(x)});
+    clearInterval(iv);iv=setInterval(upd,50);upd();
+  };
+};
+tweak.onDisable=function(){openApp=o;clearInterval(iv)};`,'Рекомендованные'],
+['Авто-ночной режим','С 22:00 до 07:00 экран сам становится тёплым',`var el,t0=0;
+tweak.onEnable=function(api){
+  el=document.createElement('div');
+  el.style.cssText='position:fixed;inset:0;z-index:30;pointer-events:none;background:#ff8c1a;mix-blend-mode:multiply;opacity:0;transition:opacity 1s';
+  document.body.appendChild(el);
+  function chk(){var h=new Date().getHours();el.style.opacity=(h>=22||h<7)?.35:0}
+  chk();t0=Date.now();
+  api.on('frame',function(){var n=Date.now();if(n-t0>30000){t0=n;chk()}});
+};
+tweak.onDisable=function(){if(el)el.remove()};`,'Рекомендованные']
+];
+function srcOf(c){return '// @name '+c[0]+'\n// @description '+c[1]+'\n'+c[2]}
+var SF={q:'',c:'Рекомендованные'},CATS=['Все','Рекомендованные','Значки','Подписи','Эффекты','Анимации','Физика','Страницы','Приложения','Жесты','Разное'];
+function autocat(c){
+  if(c[3])return c[3];var s=c[2];
+  if(/querySelector\('i'\)/.test(s))return 'Значки';
+  if(/querySelector\('b'\)/.test(s))return 'Подписи';
+  if(/openApp/.test(s))return 'Приложения';
+  if(/loose/.test(s))return 'Физика';
+  if(/hx/.test(s))return 'Страницы';
+  if(/createElement/.test(s))return 'Эффекты';
+  return 'Разное';
+}
+function storeBar(){
+  return '<div class=sb><input id=q placeholder=Поиск></div><div class=chips>'+CATS.map(function(n){return '<span class='+(SF.c===n?'chipon':'chip')+' data-a=chip:'+n+'>'+n+'</span>'}).join('')+'</div>';
+}
+function catHtml(){
+  var rows=CAT.map(function(c,i){return{c:c,i:i}}).filter(function(o){return (SF.c==='Все'||autocat(o.c)===SF.c)&&(o.c[0]+' '+o.c[1]).toLowerCase().indexOf(SF.q.toLowerCase())>=0});
+  return '<div class=g>'+rows.map(function(o){
+    var c=o.c,i=o.i,ins=tw.filter(function(x){return meta(x.src).name===c[0]})[0];
+    return '<div class=r><div class=t>'+esc(c[0])+'<small>'+esc(c[1])+'</small></div>'+(ins?'<span class=rd data-a=del:'+ins.id+'>Удалить</span>':'<span class=lk data-a=cat:'+i+'>Установить</span>')+'</div>'}).join('')+'</div>';
+}
+function find(id){return tw.filter(function(x){return x.id===id})[0]}
+function addSrc(src){
+  try{new Function("tweak","api",src)}catch(e){toast("Ошибка в файле: "+e.message);return}
+  var t={id:uid(),src:src,on:true};tw.push(t);run(t);persist();toast("Установлен: "+meta(src).name);rs();
+}
+tw.forEach(function(t){if(t.on)run(t)});
+
+/* датчики */
+var prev=null,lastShake=0;
+function onMotion(e){
+  var a=e.accelerationIncludingGravity;if(!a||a.x==null)return;gotMotion=true;
+  var s=ios?-1:1;tgx=-s*a.x*120;tgy=s*a.y*120;
+  L.tilt.slice().forEach(function(f){try{f(a)}catch(x){}});
+  var t=performance.now();
+  if(prev&&Math.abs(a.x-prev.x)+Math.abs(a.y-prev.y)+Math.abs(a.z-prev.z)>sens&&t-lastShake>900){lastShake=t;shake()}
+  prev={x:a.x,y:a.y,z:a.z};
+}
+function setSS(m){var s=document.getElementById("ss");if(s)s.textContent=m}
+function enable(){
+  function go(){addEventListener("devicemotion",onMotion);setSS("Датчики включены. Тряхни телефон на домашнем экране.");
+    setTimeout(function(){if(!gotMotion)setSS("Датчики не отвечают. Используй «Проверить тряску» или открой страницу в Chrome.")},1800)}
+  if(ios)DeviceMotionEvent.requestPermission().then(function(r){r==="granted"?go():setSS("Safari ответил: "+r+(window.top!==window.self?". Страница открыта во вложенном окне, Safari не даёт ему датчики.":". Полностью закрой Safari (смахни приложение) и открой страницу заново."))}).catch(function(e){setSS("Ошибка: "+(e&&e.name||e)+(window.top!==window.self?". Страница во вложенном окне: датчики заблокированы.":""))});
+  else go();
+}
+if(!ios)addEventListener("devicemotion",onMotion);
+
+/* приложение «Настройки» */
+var view=["main"],ed={id:null,src:TPL};
+function nr(a,txt,val){return'<div class="r" data-a="nav:'+a+'"><div class="t">'+txt+'</div><span class="ch">'+(val||"")+' ›</span></div>'}
+function rs(){
+  var v=view[view.length-1],h="",ti="";
+  if(v==="main"){
+    h='<div class="h1">Настройки</div><div class="g">'+nr("tweaks","Твики",tw.filter(function(x){return x.on}).length+" вкл.")+nr("store","TweakStore",tw.length+" установлено")+nr("editor","Редактор твиков","")+'</div>';
+  }else if(v==="tweaks"){
+    ti="Твики";
+    h='<div class="g">'+tw.map(function(x){var m=meta(x.src);return'<div class="r"><div class="t">'+esc(m.name)+'<small>'+esc(m.desc)+'</small></div><button class="bk" data-a="edit:'+x.id+'">Код</button><input class="sw" type="checkbox" data-a="tog:'+x.id+'"'+(x.on?" checked":"")+'></div>'}).join("")+'</div>'
+     +'<div class="g"><div class="r"><div class="t">Чувствительность тряски</div><input type="range" id="sens" min="12" max="45" value="'+sens+'"></div><div class="r lk" data-a="sensors">Включить датчики</div><div class="r lk" data-a="probe">Проверить тряску</div></div><div class="n" id="ss">Закрой приложение (полоска внизу) и тряхни телефон. Наклоняй его, чтобы иконки ползали.</div>';
+  }else if(v==="store"){
+    ti="TweakStore";
+    h=(view.length===1?'<div class="h1">TweakStore</div>':'')+storeBar()+'<div class="g"><label class="r lk">Добавить твик из файла .twig<input type="file" id="f" accept=".twig,.txt,.js,text/plain" hidden></label><div class="r lk" data-a="paste">Вставить код из буфера</div><div class="r lk" data-a="new">Создать в редакторе</div></div><div class="n">Файл .twig — обычный текст с JavaScript. В начале строки «// @name» и «// @description», дальше код: tweak.onEnable = function(api){ … }</div>'
+     +'<div class="g">'+tw.map(function(x){var m=meta(x.src);return'<div class="r"><div class="t">'+esc(m.name)+'<small>'+esc(m.desc)+'</small></div><span class="rd" data-a="del:'+x.id+'">Удалить</span></div>'}).join("")+'</div><div class="n">КАТАЛОГ ТВИКОВ</div>'+'<div id="cat">'+catHtml()+'</div>';
+  }else{
+    ti="Редактор";
+    h='<textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">'+esc(ed.src)+'</textarea><div id="er"></div><button class="bt s" data-a="pasteed">Вставить из буфера</button><button class="bt" data-a="save">Сохранить и включить</button><button class="bt s" data-a="tpl">Шаблон нового твика</button>';
+  }
+  wc.innerHTML=(view.length>1?'<div class="hd"><button class="bk" data-a="back">‹ Назад</button><b>'+ti+'</b></div>':"")+h;
+  var f=document.getElementById("f");if(f)f.onchange=function(){var x=f.files[0];if(x)x.text().then(addSrc)};
+  var s=document.getElementById("sens");if(s)s.oninput=function(){sens=+s.value};
+  var q=document.getElementById("q");if(q){q.value=SF.q;q.oninput=function(){SF.q=q.value;document.getElementById("cat").innerHTML=catHtml()}}
+}
+wc.addEventListener("change",function(e){
+  var a=e.target.getAttribute&&e.target.getAttribute("data-a");
+  if(a&&a.indexOf("tog:")===0){var t=find(a.slice(4));t.on=e.target.checked;if(t.on){run(t);e.target.checked=t.on}else stop(t.id);persist()}
+});
+wc.addEventListener("click",function(e){
+  var el=e.target.closest("[data-a]");if(!el)return;var a=el.getAttribute("data-a"),p=a.split(":"),c=p[0],id=p[1],t;
+  if(c==="nav"){view.push(id);rs()}
+  else if(c==="back"){view.pop();rs()}
+  else if(c==="edit"){t=find(id);ed={id:id,src:t.src};view.push("editor");rs()}
+  else if(c==="new"){ed={id:null,src:TPL};view.push("editor");rs()}
+  else if(c==="del"){stop(id);tw=tw.filter(function(x){return x.id!==id});persist();rs()}
+  else if(c==="tpl"){document.getElementById("src").value=TPL;ed={id:null,src:TPL}}
+  else if(c==="save"){
+    var src=document.getElementById("src").value,er=document.getElementById("er");
+    try{new Function("tweak","api",src)}catch(x){er.textContent="Ошибка: "+x.message;return}
+    er.textContent="";
+    if(ed.id){t=find(ed.id);t.src=src;t.on=true}else{t={id:uid(),src:src,on:true};tw.push(t);ed.id=t.id}
+    run(t);persist();toast(t.on?"Сохранено и включено":"Сохранено, но есть ошибка");
+  }
+  else if(c==='chip'){SF.c=id;rs()}
+  else if(c==='cat')addSrc(srcOf(CAT[+id]));
+  else if(c==="paste"){pasteClip(addSrc,function(){ed={id:null,src:""};view.push("editor");rs();toast("Буфер недоступен: вставь код в поле вручную")})}
+  else if(c==="pasteed"){pasteClip(function(s){document.getElementById("src").value=s},function(){toast("Буфер недоступен: вставь код в поле вручную")})}
+  else if(c==="sensors")enable();
+  else if(c==="probe"){shake();toast("Тряска проверена: закрой приложение")}
+});
+</script>
+</body>
+</html>
